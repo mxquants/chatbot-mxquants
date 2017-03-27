@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# %% Requirements 
+
 import os
 import sys
 import json
@@ -5,8 +10,13 @@ import json
 import requests
 from flask import Flask, request
 
+
+# %% Declare App 
+
 app = Flask(__name__)
 
+
+# %% GET and verify() function 
 
 @app.route('/', methods=['GET'])
 def verify():
@@ -14,11 +24,12 @@ def verify():
     # the 'hub.challenge' value it receives in the query arguments
     if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.challenge"):
         if not request.args.get("hub.verify_token") == os.environ["VERIFY_TOKEN"]:
-            return "Verification token mismatch"#, 403
-        return request.args["hub.challenge"]#, 200
+            return "Verification token mismatch", 403
+        return request.args["hub.challenge"], 200
 
-    return "Hello world"#, 200
+    return "Hello world", 200
 
+# %% POST 
 
 @app.route('/', methods=['POST'])
 def webhook():
@@ -39,7 +50,7 @@ def webhook():
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
 
-                    send_message(sender_id, "got it, thanks!")
+                    sendMessage(sender_id, "got it, thanks!")
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
@@ -53,7 +64,9 @@ def webhook():
     return "ok", 200
 
 
-def send_message(recipient_id, message_text):
+# %% sendMessage 
+
+def sendMessage(recipient_id, message_text):
 
     log("sending message to {recipient}: {text}".format(recipient=recipient_id, text=message_text))
 
@@ -76,11 +89,13 @@ def send_message(recipient_id, message_text):
         log(r.status_code)
         log(r.text)
 
+# %% Log function -- simple wrapper for logging to stdout on heroku
 
-def log(message):  # simple wrapper for logging to stdout on heroku
+def log(message):
     print(str(message))
     sys.stdout.flush()
 
+# %% 
 
 if __name__ == '__main__':
     app.run(debug=True)
